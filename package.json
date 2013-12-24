@@ -1,0 +1,19 @@
+{
+  "name" : "WebRTC-DataChannel",
+  "description" : "WebRTC-DataChannel-based simple chat system",
+  "version" : "1.0.0",
+  "engines" : {
+    "node" : ">= 0.10.24"
+  },
+  "dependencies" : {
+    "express" : "3.1.0",
+    "ws" : "latest"
+  },
+  "author" : "Henry Hung Yu Chen",
+  "contributors" : [
+    {
+      "name" : "Henry Hung Yu Chen",
+      "email" : "soulinlove541@gmail.com"
+    }
+  ]
+}

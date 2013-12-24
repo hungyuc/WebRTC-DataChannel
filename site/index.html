@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>WebRTC DataChannel</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+
+    <script src="http://140.113.88.126:8080/datachannel.js"></script>
+    <script>
+        document.createElement('article');
+    </script>
+
+    <script>
+        var chatService,
+            messageBoard,
+            messageInput;
+
+        $(document).ready(function () {
+            messageBoard = document.getElementById('message-board');
+            HTMLElement.prototype.addLI = function (message) {
+                var li = document.createElement('li');
+                li.innerHTML = message;
+                this.insertBefore(li, this.firstChild);
+            };
+
+            messageInput = document.getElementById('message-input');
+            messageInput.onkeypress = function (e) {
+                if (e.keyCode !== 13 || !this.value) return;
+                var msg = '[' + chatService.getSelfId() + ']: ' + this.value;
+                chatService.rtcSend(msg);
+                messageBoard.addLI(msg);
+                this.value = '';
+                this.focus();
+            };
+
+            chatService = new ChatService();
+        });
+        
+    </script>
+
+    <style>
+        @import url(https://fonts.googleapis.com/css?family=Inconsolata);
+
+        html {
+            background: #442244;
+        }
+
+        body {
+            font-family: "Inconsolata";
+            font-size: 1.2em;
+            line-height: 1.2em;
+            margin: 0;
+        }
+
+        article {
+            display: block;
+            min-width: 400px;
+            width: 70%;
+            background: #fff;
+            border: 1px solid;
+            margin: 2em auto 0 auto;
+            padding: 1.8em;
+        }
+
+        h1 {
+            font-weight: bold;
+            margin: 5px 0 15px 0;
+        }
+
+        :-moz-any-link:focus {
+            border: 0;
+            color: #000;
+        }
+
+        ::selection {
+            background: #ccc;
+        }
+
+        ::-moz-selection {
+            background: #ccc;
+        }
+
+        input[type=text] {
+            width: 100%;
+        }
+
+        legend:not(.inner-legend){
+            color: #000;
+            font-size: 1.2em;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0px;
+        }
+            
+            ul li {
+                padding-top: 0.2em;
+            }
+
+    </style>
+</head>
+
+<body>
+    <article>
+        <h1>WebRTC DataChannel Chat</h1>
+
+        <div>
+            <input type="text" id="message-input" placeholder="Enter your message...">
+        </div>
+        <div>
+            <fieldset>
+                <legend>Message Panel</legend>
+                <ul id="message-board"></ul>
+            </fieldset>
+        </div>
+
+    </article>
+</body>
+</html>
