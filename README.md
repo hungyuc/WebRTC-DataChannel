@@ -5,7 +5,35 @@ WebRTC DataChannel for Chrome and Firefox
 
 =
 
-##### Henry Hung Yu Chen - Contact Me : [Email](mailto:soulinlove541@gmail.com)  /  [facebook](http://www.facebook.com/hungyu.chen.cs01g)  /  [Google+](https://plus.google.com/u/0/+³¯¥°¨|hungyuc)
+##Instructions on how to setup the demo:
+
+Run in your terminal
+
+```bash 
+git clone git@github.com:hungyuc/WebRTC-DataChannel.git
+```
+
+```bash 
+cd WebRTC-DataChannel
+```
+
+```bash 
+npm install
+```
+
+```bash 
+cd site
+```
+
+```bash 
+node server.js
+```
+
+Connect to [localhost:8080](http://localhost:8080) in a version of Chrome or Firefox that have WebRTC support.
+
+=
+
+##### Henry Hung Yu Chen - Contact Me : [Email](mailto:soulinlove541@gmail.com)  /  [facebook](http://www.facebook.com/hungyu.chen.cs01g)  /  [Google+](http://goo.gl/zhehfb)
 
 =
 
