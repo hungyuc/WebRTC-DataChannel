@@ -1,4 +1,10 @@
 /**
+ * @author <a href="mailto:soulinlove541@gmail.com">Henry Hung Yu Chen</a>
+ * @version 1.0
+ * @copyright Hung Yu Chen 2013
+ */
+
+/**
  * Create a new RTCManager which manages webrtc peer connections and data channels.
  * @constructor
  */
@@ -8,6 +14,13 @@ function RTCManager() {
     this.addRTC = function (id,rtc) {
         rtcList[id] = rtc;
     };
+
+    this.updateRTC = function (id,npc,ndc) {
+        if(rtcList[id]){
+            if(npc) rtcList[id].pc = npc;
+            if(ndc) rtcList[id].dc = ndc;
+        }
+    }
 
     this.removeRTC = function (id) {
         rtcList[id] = null;
@@ -28,13 +41,19 @@ function RTCManager() {
     };
 }
 
-
-function ChatService() {
+/**
+ * Create a new ChatService.
+ * @constructor
+ */
+function ChatService(board) {
     var selfId,
         ws = new WebSocket('ws://140.113.88.126:9000/'),
         rtcManager = new RTCManager(), // for rtc peerconnection and datachannel
         nodeList = [],
-        RTC = RTCForChrome;
+        RTC = (window.RTCSessionDescription)? RTCForChrome:RTCForFirefox,
+        RTCSessionDescription = window.RTCSessionDescription || mozRTCSessionDescription,
+        RTCIceCandidate = window.RTCIceCandidate || mozRTCIceCandidate,
+        messageBoard = board;
 
     ws.onopen = function () {
         console.log('ws: server connected');
@@ -80,6 +99,10 @@ function ChatService() {
         return selfId;
     }
 
+    /**
+     * Display message on the web page.
+     * @param  {String} message
+     */
     function displayMessage (message) {
         messageBoard.addLI(message);
     }
@@ -93,6 +116,14 @@ function ChatService() {
         }
     }
 
+    /**
+     * Create a new RTC for Chrome.
+     * @constructor
+     * @param   {String}  role     The role(offerer or answerer) of this node.
+     * @param   {Object}  json     Json object which contains the session description string.
+     * @param   {Number}  targetid The id of the opposite side.
+     * @return  {Object}  An object contains peer connection and data channel.
+     */
     function RTCForChrome(role, json, targetid) {
         var iceServers = {
                 iceServers: [{
@@ -165,6 +196,94 @@ function ChatService() {
             console.log('rtc: receive message: '+event.data);
             displayMessage(event.data);
         };
+
+        return {
+            'pc': rtcPeerConnection,
+            'dc': rtcDataChannel
+        };
+    }
+
+    /**
+     * Create a new RTC for Firefox
+     * @constructor
+     * @param   {String}  role     The role(offerer or answerer) of this node.
+     * @param   {Object}  json     Json object which contains the session description string.
+     * @param   {Number}  targetid The id of the opposite side.
+     * @return  {Object}  An object contains peer connection and data channel.
+     */
+    function RTCForFirefox(role, json, targetid) {
+        var iceServers = {
+                iceServers: [{
+                    url: 'stun:23.21.150.121'
+                }]
+            },
+            mediaConstraints = {
+                optional: [],
+                mandatory: {
+                    OfferToReceiveAudio: false,
+                    OfferToReceiveVideo: false
+                }
+            },
+            rtcPeerConnection = new mozRTCPeerConnection(iceServers),
+            rtcDataChannel;
+
+        if(role == 'answerer') {
+            offerSDP = new mozRTCSessionDescription(json.sdp);
+            rtcPeerConnection.setRemoteDescription(offerSDP);
+            rtcPeerConnection.createAnswer(function (sessionDescription) {
+                rtcPeerConnection.setLocalDescription(sessionDescription);
+                ws.send(JSON.stringify({
+                    'event': 'send_answer',
+                    'to': json.from,
+                    'sdp': sessionDescription
+                }));
+            }, useless, mediaConstraints);
+
+        } else {
+            rtcDataChannel = rtcPeerConnection.createDataChannel('RTCDataChannel', {});
+            rtcPeerConnection.createOffer(function (sessionDescription) {
+                rtcPeerConnection.setLocalDescription(sessionDescription);
+                ws.send(JSON.stringify({
+                    'event': 'send_offer',
+                    'to': targetid,
+                    'sdp': sessionDescription
+                }));
+            }, useless, mediaConstraints);
+
+            setupRTCDataChannel();
+        }
+
+        rtcPeerConnection.onicecandidate = function (event) {
+            console.log('rtc: onicecandidate');
+        };
+
+        rtcPeerConnection.ondatachannel = function (event) {
+            console.log('rtc: data channel is connecting...');
+            if(role == 'answerer'){
+                rtcDataChannel = event.channel;
+                rtcManager.updateRTC(targetid,null,rtcDataChannel);
+                setupRTCDataChannel();
+            }
+        };
+
+        function setupRTCDataChannel(){
+            rtcDataChannel.onopen = function () {
+                console.log('rtc: data channel has opened');
+                this.send('['+selfId+']: hi, I am '+selfId);
+            };
+
+            rtcDataChannel.onclose = function () { // seems to be useless
+                console.log('rtc: data channel has closed');
+                this.send(selfId + ' has leaved the chat');
+            };
+
+            rtcDataChannel.onmessage = function (event) {
+                console.log('rtc: receive message: '+event.data);
+                displayMessage(event.data);
+            };
+        }
+
+        function useless() {}
 
         return {
             'pc': rtcPeerConnection,
